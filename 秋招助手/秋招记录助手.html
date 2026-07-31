@@ -468,6 +468,19 @@ svg {
   box-shadow: var(--shadow-sm);
 }
 
+.button-candidate {
+  border: 1px solid var(--line-strong);
+  background: var(--surface-soft);
+  color: var(--text-soft);
+  box-shadow: var(--shadow-xs);
+}
+
+.button-candidate:hover {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
 .sparkle {
   font-size: 14px;
 }
@@ -734,7 +747,7 @@ svg {
 
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 13px;
   margin: 16px 0;
 }
@@ -790,6 +803,11 @@ svg {
 .metric-icon.green {
   background: var(--green-soft);
   color: var(--green);
+}
+
+.metric-icon.slate {
+  background: var(--surface-soft);
+  color: var(--text-soft);
 }
 
 .metric-card > div:last-child {
@@ -7539,6 +7557,12 @@ a:focus-visible {
               <span class="sparkle">✦</span>
               智能录入
             </button>
+            <button class="button button-candidate" id="openCandidate">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 4v16M4 12h16" />
+              </svg>
+              记录候选
+            </button>
             <button class="button button-primary" id="openAdd">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 5v14M5 12h14" />
@@ -7600,11 +7624,24 @@ a:focus-visible {
                 </div>
                 <div>
                   <span>本周投递</span>
-                  <strong id="metricWeek">0</strong>
-                  <small id="metricWeekHint">目标可在设置中调整</small>
+                 <strong id="metricWeek">0</strong>
+                 <small id="metricWeekHint">目标可在设置中调整</small>
+               </div>
+             </article>
+              <article class="metric-card">
+                <div class="metric-icon slate">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M5 6h14v12H5z" />
+                    <path d="M8 3v3m8-3v3M8 10h8M8 14h5" />
+                  </svg>
+                </div>
+                <div>
+                  <span>候选岗位</span>
+                  <strong id="metricCandidate">0</strong>
+                  <small id="metricCandidateHint">截图识别后会出现在这里</small>
                 </div>
               </article>
-              <article class="metric-card">
+             <article class="metric-card">
                 <div class="metric-icon amber">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <circle cx="12" cy="12" r="9" />
@@ -7829,8 +7866,9 @@ a:focus-visible {
                   <input id="historySearch" type="search" placeholder="搜索公司、岗位、渠道或备注" />
                 </label>
                 <select class="select-control" id="historyStatusFilter" aria-label="筛选历史状态">
-                  <option value="all">全部状态</option>
-                  <option value="applied">已投递</option>
+                 <option value="all">全部状态</option>
+                  <option value="candidate">候选投递</option>
+                 <option value="applied">已投递</option>
                   <option value="assessment">测评/笔试</option>
                   <option value="interview1">一面</option>
                   <option value="interview2">二面</option>
@@ -8348,7 +8386,7 @@ a:focus-visible {
       <form method="dialog" id="applicationForm">
         <div class="modal-header">
           <div>
-            <span class="eyebrow compact"><i></i> 投递记录</span>
+            <span class="eyebrow compact" id="applicationModalEyebrow"><i></i> 投递记录</span>
             <h2 id="applicationModalTitle">新增投递</h2>
           </div>
           <button type="button" class="icon-button close-modal" aria-label="关闭">
@@ -8397,7 +8435,7 @@ a:focus-visible {
             <input id="locationInput" placeholder="例如：北京 / 远程" />
           </label>
           <label>
-            <span>投递时间</span>
+            <span id="applicationDateLabel">投递时间</span>
             <input id="appliedAtInput" type="datetime-local" />
           </label>
           <label>
@@ -8432,7 +8470,7 @@ a:focus-visible {
 
         <div class="modal-footer">
           <button type="button" class="button button-ghost close-modal">取消</button>
-          <button type="submit" class="button button-primary">保存投递</button>
+          <button type="submit" class="button button-primary" id="applicationSubmitButton">保存投递</button>
         </div>
       </form>
     </dialog>
@@ -8743,9 +8781,10 @@ a:focus-visible {
         <div class="empty-illustration">
           <span></span><span></span><span></span>
         </div>
-        <h4>还没有投递记录</h4>
-        <p>新增一条记录，或载入示例看看状态如何流转。</p>
+       <h4>还没有投递记录</h4>
+        <p>岗位截图先保存为候选投递，确认要投时再推进到已投递。</p>
         <div>
+          <button class="button button-candidate empty-candidate">记录候选</button>
           <button class="button button-primary empty-add">新增投递</button>
           <button class="button button-soft empty-demo">载入示例</button>
         </div>
@@ -8767,8 +8806,9 @@ a:focus-visible {
   const JOB_PAGE_FETCH_TIMEOUT_MS = 10000;
   const JOB_PAGE_TEXT_LIMIT = 12000;
 
-  const STATUS_CONFIG = [
-    { id: "applied", label: "已投递", color: "#635bdf", rank: 1, board: true },
+ const STATUS_CONFIG = [
+    { id: "candidate", label: "候选投递", color: "#6b778c", rank: 0, board: true },
+   { id: "applied", label: "已投递", color: "#635bdf", rank: 1, board: true },
     { id: "assessment", label: "测评/笔试", color: "#d9902f", rank: 2, board: true },
     { id: "interview1", label: "一面", color: "#2f9fba", rank: 3, board: true },
     { id: "interview2", label: "二面", color: "#257fc2", rank: 4, board: true },
@@ -8784,8 +8824,9 @@ a:focus-visible {
     low: { label: "低", full: "低优先级" },
   };
 
-  const STATUS_NEXT_ACTIONS = {
-    applied: "等待简历筛选结果",
+ const STATUS_NEXT_ACTIONS = {
+    candidate: "确认是否正式投递",
+   applied: "等待简历筛选结果",
     assessment: "完成测评/笔试",
     interview1: "准备一面项目介绍",
     interview2: "准备二面重点问题",
@@ -8988,9 +9029,9 @@ a:focus-visible {
     return result;
   }
 
-  function statusInfo(id) {
-    return STATUS_CONFIG.find((status) => status.id === id) || STATUS_CONFIG[0];
-  }
+ function statusInfo(id) {
+    return STATUS_CONFIG.find((status) => status.id === id) || STATUS_CONFIG.find((status) => status.id === "applied") || STATUS_CONFIG[0];
+ }
 
   function companyColor(name) {
     const input = String(name || "秋");
@@ -9220,20 +9261,23 @@ a:focus-visible {
       const date = toDate(app.appliedAt || app.createdAt);
       return date && date >= weekStart;
     }).length;
-    const active = state.applications.filter(isActive).length;
-    const offers = state.applications.filter((app) => app.status === "offer").length;
-    const interviews = submitted.filter((app) => hasReached(app, "interview1")).length;
+   const active = state.applications.filter(isActive).length;
+   const offers = state.applications.filter((app) => app.status === "offer").length;
+    const candidates = state.applications.filter((app) => app.status === "candidate").length;
+   const interviews = submitted.filter((app) => hasReached(app, "interview1")).length;
     const interviewRate = submitted.length ? Math.round((interviews / submitted.length) * 100) : 0;
     const goal = Math.max(1, Number(state.settings.weeklyGoal) || 15);
     const rhythm = Math.round((weekly / goal) * 100);
 
-    $("#metricTotal").textContent = submitted.length;
-    $("#metricWeek").textContent = weekly;
-    $("#metricActive").textContent = active;
-    $("#metricOffer").textContent = offers;
+   $("#metricTotal").textContent = submitted.length;
+   $("#metricWeek").textContent = weekly;
+    $("#metricCandidate").textContent = candidates;
+   $("#metricActive").textContent = active;
+   $("#metricOffer").textContent = offers;
     $("#metricTotalHint").textContent = submitted.length ? `共记录 ${state.applications.length} 个岗位` : "开始记录你的秋招";
-    $("#metricWeekHint").textContent = `目标 ${goal} · 已完成 ${Math.min(rhythm, 999)}%`;
-    $("#metricActiveHint").textContent = active ? `${interviews} 个流程进入面试` : "暂无进行中的流程";
+   $("#metricWeekHint").textContent = `目标 ${goal} · 已完成 ${Math.min(rhythm, 999)}%`;
+    $("#metricCandidateHint").textContent = candidates ? "待确认是否正式投递" : "截图识别后会出现在这里";
+   $("#metricActiveHint").textContent = active ? `${interviews} 个流程进入面试` : "暂无进行中的流程";
     $("#metricOfferHint").textContent = offers ? "已进入 Offer 阶段" : "暂无 Offer";
     $("#offerRate").textContent = `${interviewRate}%`;
     $("#offerOrbit").style.strokeDashoffset = String(301.59 * (1 - interviewRate / 100));
@@ -9352,9 +9396,10 @@ a:focus-visible {
       board.innerHTML = "";
       board.appendChild(template);
       archive.innerHTML = "";
-      board.style.display = "block";
-      $(".empty-add", board).addEventListener("click", openAddModal);
-      $(".empty-demo", board).addEventListener("click", loadDemoData);
+     board.style.display = "block";
+     $(".empty-add", board).addEventListener("click", openAddModal);
+      $(".empty-candidate", board).addEventListener("click", openCandidateModal);
+     $(".empty-demo", board).addEventListener("click", loadDemoData);
       return;
     }
 
@@ -10369,13 +10414,29 @@ a:focus-visible {
     });
   }
 
-  function openAddModal() {
+ function openAddModal() {
+   $("#applicationForm").reset();
+   $("#applicationId").value = "";
+   $("#applicationModalTitle").textContent = "新增投递";
+    $("#applicationModalEyebrow").innerHTML = "<i></i> 投递记录";
+   $("#applicationStatusInput").value = "applied";
+   $("#priorityInput").value = "medium";
+   $("#appliedAtInput").value = toLocalDateTimeValue(new Date());
+    $("#applicationDateLabel").textContent = "投递时间";
+    $("#applicationSubmitButton").textContent = "保存投递";
+   $("#applicationModal").showModal();
+ }
+
+  function openCandidateModal() {
     $("#applicationForm").reset();
     $("#applicationId").value = "";
-    $("#applicationModalTitle").textContent = "新增投递";
-    $("#applicationStatusInput").value = "applied";
+    $("#applicationModalEyebrow").innerHTML = "<i></i> 候选岗位";
+    $("#applicationModalTitle").textContent = "记录候选岗位";
+    $("#applicationStatusInput").value = "candidate";
     $("#priorityInput").value = "medium";
     $("#appliedAtInput").value = toLocalDateTimeValue(new Date());
+    $("#applicationDateLabel").textContent = "记录时间";
+    $("#applicationSubmitButton").textContent = "保存候选";
     $("#applicationModal").showModal();
   }
 
@@ -10396,9 +10457,13 @@ a:focus-visible {
     $("#meetingLinkInput").value = app.meetingLink || "";
     $("#tagsInput").value = (app.tags || []).join("、");
     $("#nextActionInput").value = app.nextAction || "";
-    $("#notesInput").value = app.notes || "";
-    $("#applicationModalTitle").textContent = "编辑投递";
-    $("#applicationModal").showModal();
+   $("#notesInput").value = app.notes || "";
+    const isCandidate = app.status === "candidate";
+    $("#applicationModalEyebrow").innerHTML = `<i></i> ${isCandidate ? "候选岗位" : "投递记录"}`;
+    $("#applicationDateLabel").textContent = isCandidate ? "记录时间" : "投递时间";
+    $("#applicationSubmitButton").textContent = isCandidate ? "保存候选" : "保存投递";
+    $("#applicationModalTitle").textContent = isCandidate ? "编辑候选岗位" : "编辑投递";
+   $("#applicationModal").showModal();
   }
 
   async function handleApplicationSubmit(event) {
@@ -10506,16 +10571,16 @@ a:focus-visible {
     await putApplication(app);
     $("#applicationModal").close();
     renderAll();
-    if (state.selectedId === app.id) renderDetail(app);
-    showToast(existing ? "投递信息已更新" : "已新增投递记录");
+   if (state.selectedId === app.id) renderDetail(app);
+    showToast(existing ? "记录已更新" : app.status === "candidate" ? "候选岗位已保存" : "已新增投递记录");
   }
 
   function applicationCopyText(app) {
     return [
-      `${app.company}｜${app.position}`,
-      `当前状态：${statusInfo(app.status).label}`,
-      `投递渠道：${app.source || "未填写"}`,
-      `投递时间：${formatDate(app.appliedAt, true)}`,
+     `${app.company}｜${app.position}`,
+     `当前状态：${statusInfo(app.status).label}`,
+     `投递渠道：${app.source || "未填写"}`,
+      `${app.status === "candidate" ? "记录时间" : "投递时间"}：${formatDate(app.appliedAt, true)}`,
       `下一节点：${app.nextActionAt ? formatDate(app.nextActionAt, true) : "暂无"}${
         app.nextAction ? ` · ${app.nextAction}` : ""
       }`,
@@ -10621,11 +10686,11 @@ a:focus-visible {
       <section class="detail-section">
         <h3>投递信息</h3>
         <div class="detail-grid">
-          <div class="detail-field"><span>当前状态</span><strong>${escapeHTML(status.label)}</strong></div>
-          <div class="detail-field"><span>投递渠道</span><strong>${escapeHTML(app.source || "未填写")}</strong></div>
-          <div class="detail-field"><span>投递时间</span><strong>${escapeHTML(
-            formatDate(app.appliedAt, true),
-          )}</strong></div>
+         <div class="detail-field"><span>当前状态</span><strong>${escapeHTML(status.label)}</strong></div>
+         <div class="detail-field"><span>投递渠道</span><strong>${escapeHTML(app.source || "未填写")}</strong></div>
+          <div class="detail-field"><span>${app.status === "candidate" ? "记录时间" : "投递时间"}</span><strong>${escapeHTML(
+           formatDate(app.appliedAt, true),
+         )}</strong></div>
           <div class="detail-field"><span>工作地点</span><strong>${escapeHTML(
             app.location || "未填写",
           )}</strong></div>
@@ -11305,8 +11370,8 @@ a:focus-visible {
   function buildExtractionPrompt(mode, text) {
     const modeInstructions = {
       screenshot:
-        "输入是一张招聘信息或招聘流程通知截图。请通过视觉理解提取所有可见信息；如果截图是面试通知，优先识别面试轮次、时间、会议平台和链接。",
-      jd: "输入是一份岗位描述。请提取公司、岗位、地点、截止时间、技术栈、岗位标签和关键信息；默认状态建议为 applied。",
+        "输入是一张招聘信息或招聘流程通知截图。请通过视觉理解提取所有可见信息；如果是岗位发布/职位描述截图，默认识别为候选投递；如果是面试通知，优先识别面试轮次、时间、会议平台和链接。",
+      jd: "输入是一份岗位描述。请提取公司、岗位、地点、截止时间、技术栈、岗位标签和关键信息；默认状态建议为 candidate。",
       link:
         "输入来自一个公开招聘链接。只能依据下方明确提供的页面正文或用户补充文本提取信息；URL 只可原样作为 job_link，严禁根据域名、URL 路径、slug、公司常识或模型记忆猜测公司、岗位、地点、技术栈及其他缺失字段。没有正文依据的字段必须留空。",
       message:
@@ -11327,7 +11392,7 @@ ${modeInstructions[mode]}
   "position": "岗位名称，未知则空字符串",
   "location": "工作地点，未知则空字符串",
   "deadline": "ISO 8601 时间或空字符串",
-  "current_status": "只能是 applied/assessment/interview1/interview2/hr/offer/paused/rejected 之一",
+  "current_status": "只能是 candidate/applied/assessment/interview1/interview2/hr/offer/paused/rejected 之一",
   "event_type": "job_posting/application/assessment/interview/status_update/offer/rejection/unknown 之一",
   "event_time": "ISO 8601 时间或空字符串",
   "next_action_time": "只有材料明确给出下一次笔试、面试、截止或跟进日期时填写 ISO 8601；投递时间、消息发送时间不能填入这里",
@@ -11353,6 +11418,7 @@ ${modeInstructions[mode]}
 7. 技术栈和标签都必须来自原材料。
 8. 当输入模式是招聘链接时，不能假设你可以联网，也不能声称读取了未在材料中出现的网页内容；只有“页面正文”部分可作为岗位事实依据。
 9. “等待筛选结果、后续另行通知”没有明确日期，next_action_time 必须留空，不能把投递时间或通知发送时间当作下一节点时间。
+10. 仅有岗位发布、职位描述或招聘页面信息时输出 candidate；只有材料明确显示已提交投递、投递成功或已进入招聘流程时，才输出 applied 或更后续状态。
 
 当前已有投递记录（用于判断可能的重复项，不代表输入事实）：
 ${existing || "无"}
@@ -11647,11 +11713,14 @@ ${text || "无"}
     }
   }
 
-  function normalizeAIStatus(value) {
+  function normalizeAIStatus(value, fallback = "applied") {
     const normalized = normalizeText(value);
     const aliases = {
-      待投递: "applied",
-      wishlist: "applied",
+      候选投递: "candidate",
+      候选: "candidate",
+      待投递: "candidate",
+      wishlist: "candidate",
+      candidate: "candidate",
       已投递: "applied",
       投递: "applied",
       applied: "applied",
@@ -11674,24 +11743,26 @@ ${text || "无"}
       rejected: "rejected",
       rejection: "rejected",
     };
-    return aliases[normalized] || (STATUS_CONFIG.some((item) => item.id === value) ? value : "applied");
-  }
+    return aliases[normalized] || (STATUS_CONFIG.some((item) => item.id === value) ? value : fallback);
+ }
 
-  function normalizeAIResult(result) {
-    const techStack = Array.isArray(result.tech_stack)
-      ? result.tech_stack
-      : Array.isArray(result.techStack)
-        ? result.techStack
-        : [];
-    const tags = Array.isArray(result.tags) ? result.tags : [];
-    const confidence = Number(result.confidence);
-    return {
-      company: result.company || result.company_name || "",
-      position: result.position || result.job_title || result.role || "",
-      location: result.location || "",
-      deadline: result.deadline || "",
-      status: normalizeAIStatus(result.current_status || result.status),
-      eventType: result.event_type || "unknown",
+ function normalizeAIResult(result) {
+   const techStack = Array.isArray(result.tech_stack)
+     ? result.tech_stack
+     : Array.isArray(result.techStack)
+       ? result.techStack
+       : [];
+   const tags = Array.isArray(result.tags) ? result.tags : [];
+   const confidence = Number(result.confidence);
+    const eventType = result.event_type || "unknown";
+    const fallbackStatus = eventType === "job_posting" ? "candidate" : "applied";
+   return {
+     company: result.company || result.company_name || "",
+     position: result.position || result.job_title || result.role || "",
+     location: result.location || "",
+     deadline: result.deadline || "",
+      status: normalizeAIStatus(result.current_status || result.status, fallbackStatus),
+      eventType,
       eventTime: result.event_time || result.interview_time || "",
       nextActionTime: result.next_action_time || result.nextActionTime || "",
       meetingLink: result.meeting_link || "",
@@ -11775,9 +11846,17 @@ ${text || "无"}
           .join("\n\n");
       }
       const prompt = buildExtractionPrompt(state.aiMode, extractionText);
-      const raw = await callModel(prompt, input.image, input.mime);
-      state.aiResult = normalizeAIResult(parseJSONResponse(raw));
-      if (state.aiMode === "link") state.aiResult.jobLink = state.aiSourceURL;
+     const raw = await callModel(prompt, input.image, input.mime);
+     state.aiResult = normalizeAIResult(parseJSONResponse(raw));
+     if (
+       ["screenshot", "jd", "link"].includes(state.aiMode) &&
+        !["application", "assessment", "interview", "status_update", "offer", "rejection"].includes(
+          state.aiResult.eventType,
+        )
+     ) {
+       state.aiResult.status = "candidate";
+     }
+     if (state.aiMode === "link") state.aiResult.jobLink = state.aiSourceURL;
       populateAIReview(state.aiResult);
       $("#aiLoadingStep").classList.remove("active");
       $("#aiReviewStep").classList.add("active");
@@ -11815,9 +11894,9 @@ ${text || "无"}
     ) {
       return result.eventTime;
     }
-    if (result?.eventType === "job_posting" && toDate(result?.deadline)) {
-      return result.deadline;
-    }
+    if (result?.status === "candidate" && toDate(result?.deadline)) {
+     return result.deadline;
+   }
     return "";
   }
 
@@ -11835,14 +11914,17 @@ ${text || "无"}
     $("#reviewNextAction").value = result.nextAction;
     $("#reviewNotes").value = result.summary;
     $("#confidencePill").textContent = `${Math.round(result.confidence * 100)}% 可信度`;
-    $("#reviewSummary").textContent =
-      state.aiMode === "link"
-        ? state.aiPageReadStatus === "read"
-          ? "已读取页面正文"
-          : "仅识别链接，建议补充正文或截图"
-        : result.eventType === "job_posting"
-          ? "已提取岗位信息和技术标签"
-          : "已识别招聘流程与关键时间";
+   $("#reviewSummary").textContent =
+     state.aiMode === "link"
+       ? state.aiPageReadStatus === "read"
+         ? "已读取页面正文"
+         : "仅识别链接，建议补充正文或截图"
+       : result.eventType === "job_posting"
+         ? "已提取岗位信息和技术标签"
+         : "已识别招聘流程与关键时间";
+    if (result.status === "candidate") {
+      $("#reviewSummary").textContent = "这是岗位信息，默认按候选投递保存；确认后再推进到已投递";
+    }
     const duplicate = findDuplicate(result.company, result.position);
     state.aiTargetId = duplicate?.id || null;
     const warning = $("#duplicateWarning");
@@ -11983,7 +12065,13 @@ ${text || "无"}
     closeAIModal();
     switchPage("workspace");
     renderAll();
-    showToast(existing ? "AI 识别结果已更新到已有记录" : "AI 识别结果已保存为新投递");
+    showToast(
+      existing
+        ? "AI 识别结果已更新到已有记录"
+        : app.status === "candidate"
+          ? "AI 识别结果已保存为候选岗位"
+          : "AI 识别结果已保存为新投递",
+    );
     openDetail(app.id);
   }
 
@@ -12077,8 +12165,9 @@ ${text || "无"}
       renderBoard();
       renderList();
     });
-    $("#openAdd").addEventListener("click", openAddModal);
-    $("#openAI").addEventListener("click", openAIModal);
+   $("#openAdd").addEventListener("click", openAddModal);
+    $("#openCandidate").addEventListener("click", openCandidateModal);
+   $("#openAI").addEventListener("click", openAIModal);
     $("#applicationForm").addEventListener("submit", handleApplicationSubmit);
     $("#transitionForm").addEventListener("submit", handleTransitionSubmit);
     $("#closeTransition").addEventListener("click", closeTransitionModal);
@@ -12223,19 +12312,19 @@ ${text || "无"}
         continue;
       }
       const now = new Date().toISOString();
-      const updated = {
-        ...app,
-        status: "applied",
-        updatedAt: now,
-        timeline: [
-          {
-            id: uid("event"),
-            type: "status-change",
-            from: "wishlist",
-            to: "applied",
-            at: now,
-            note: "移除「待投递」阶段后，记录已自动并入「已投递」",
-          },
+     const updated = {
+       ...app,
+        status: "candidate",
+       updatedAt: now,
+       timeline: [
+         {
+           id: uid("event"),
+           type: "status-change",
+           from: "wishlist",
+            to: "candidate",
+           at: now,
+            note: "历史「待投递」记录已恢复为「候选投递」",
+         },
           ...(app.timeline || []),
         ],
       };
