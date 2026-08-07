@@ -21,6 +21,8 @@ RAG 必须分成两条时间上不同的链路：
 - ★★★★☆：HNSW/IVF、Query Rewrite、Parent-Child、权限、版本与迁移；
 - ★★★☆☆：HyDE、GraphRAG、十亿级检索的深入实现。
 
+> Elasticsearch、Neo4j 和 GraphRAG 的产品内部机制与专项场景统一见 [`14-搜索引擎与图数据库.md`](14-搜索引擎与图数据库.md)；本章继续聚焦端到端 RAG 方法与评测。
+
 # 第一部分：常规八股
 
 ## 1. RAG 的完整流程是什么？
